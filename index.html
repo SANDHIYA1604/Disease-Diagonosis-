@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Diagnosis System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .symptom-tag {
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 14px;
+            user-select: none;
+        }
+        
+        .symptom-tag:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .symptom-tag.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            font-weight: 600;
+        }
+        
+        .selected-symptoms {
+            margin-bottom: 25px;
+        }
+        
+        .selected-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 50px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #e0e0e0;
+        }
+        
+        .selected-item {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: popIn 0.3s ease-out;
+        }
+        
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .remove-btn {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        
+        .remove-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: rotate(90deg);
+        }
+        
+        .empty-message {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .diagnose-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .diagnose-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .diagnose-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .disease-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .disease-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .disease-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .match-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #4CAF50);
+            border-radius: 3px;
+            transition: width 0.5s ease-out;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            border-left: 4px solid #c62828;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Disease Diagnosis System</h1>
+        <p class="subtitle">Click on symptoms to select them</p>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalSymptoms">0</div>
+                <div class="stat-label">Available Symptoms</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="selectedCount">0</div>
+                <div class="stat-label">Selected</div>
+            </div>
+        </div>
+        
+        <div class="selected-symptoms">
+            <div class="section-title">
+                ✅ Selected Symptoms:
+            </div>
+            <div class="selected-list" id="selectedList">
+                <div class="empty-message">No symptoms selected yet. Click symptoms below to add them.</div>
+            </div>
+        </div>
+        
+        <div class="section-title">
+            🔍 Search & Select Symptoms:
+        </div>
+        <input type="text" class="search-box" id="searchBox" placeholder="Search symptoms...">
+        
+        <div class="symptoms-grid" id="symptomsGrid">
+            <div class="loading show">
+                <div class="spinner"></div>
+                <p>Loading symptoms from database...</p>
+            </div>
+        </div>
+        
+        <button class="diagnose-btn" onclick="diagnose()" id="diagnoseBtn" disabled>
+            Diagnose Disease
+        </button>
+        
+        <div class="loading" id="diagnosing">
+            <div class="spinner"></div>
+            <p>Analyzing symptoms...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <h2>📋 Possible Diagnoses:</h2>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allSymptoms = new Set();
+        let selectedSymptoms = new Set();
+        
+        // Load symptoms from backend
+        async function loadSymptoms() {
+            try {
+                const response = await fetch('http://localhost:8080/symptoms');
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const data = await response.json();
+                
+                // Add all symptoms to the set
+                data.symptoms.forEach(symptom => {
+                    allSymptoms.add(symptom.toLowerCase());
+                });
+                
+                displaySymptoms();
+            } catch (error) {
+                document.getElementById('symptomsGrid').innerHTML = 
+                    '<div class="error show">Failed to load symptoms. Make sure the backend server is running.</div>';
+                console.error('Error loading symptoms:', error);
+            }
+        }
+        
+        function displaySymptoms(filter = '') {
+            const grid = document.getElementById('symptomsGrid');
+            const symptoms = Array.from(allSymptoms).sort();
+            const filtered = filter 
+                ? symptoms.filter(s => s.includes(filter.toLowerCase()))
+                : symptoms;
+            
+            document.getElementById('totalSymptoms').textContent = allSymptoms.size;
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty-message">No symptoms found</div>';
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(symptom => `
+                <div class="symptom-tag ${selectedSymptoms.has(symptom) ? 'selected' : ''}" 
+                     onclick="toggleSymptom('${symptom}')">
+                    ${symptom}
+                </div>
+            `).join('');
+        }
+        
+        function toggleSymptom(symptom) {
+            if (selectedSymptoms.has(symptom)) {
+                selectedSymptoms.delete(symptom);
+            } else {
+                selectedSymptoms.add(symptom);
+            }
+            updateSelectedList();
+            displaySymptoms(document.getElementById('searchBox').value);
+        }
+        
+        function updateSelectedList() {
+            const list = document.getElementById('selectedList');
+            const count = document.getElementById('selectedCount');
+            const btn = document.getElementById('diagnoseBtn');
+            
+            count.textContent = selectedSymptoms.size;
+            
+            if (selectedSymptoms.size === 0) {
+                list.innerHTML = '<div class="empty-message">No symptoms selected yet. Click symptoms below to add them.</div>';
+                btn.disabled = true;
+            } else {
+                list.innerHTML = Array.from(selectedSymptoms).map(symptom => `
+                    <div class="selected-item">
+                        ${symptom}
+                        <button class="remove-btn" onclick="toggleSymptom('${symptom}')">×</button>
+                    </div>
+                `).join('');
+                btn.disabled = false;
+            }
+        }
+        
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            displaySymptoms(e.target.value);
+        });
+        
+        async function diagnose() {
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            const errorDiv = document.getElementById('error');
+            const loadingDiv = document.getElementById('diagnosing');
+            const button = document.getElementById('diagnoseBtn');
+            
+            if (selectedSymptoms.size === 0) {
+                errorDiv.textContent = '⚠️ Please select at least one symptom';
+                errorDiv.classList.add('show');
+                setTimeout(() => errorDiv.classList.remove('show'), 3000);
+                return;
+            }
+            
+            resultsDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+            loadingDiv.classList.add('show');
+            button.disabled = true;
+            
+            try {
+                const symptomsStr = Array.from(selectedSymptoms).join(',');
+                const response = await fetch('http://localhost:8080/diagnose', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `symptoms=${encodeURIComponent(symptomsStr)}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Server error');
+                }
+                
+                const data = await response.json();
+                loadingDiv.classList.remove('show');
+                button.disabled = false;
+                
+                if (data.status === 'no_match' || data.matches.length === 0) {
+                    resultsContent.innerHTML = `
+                        <div style="text-align: center; padding: 30px;">
+                            <p style="font-size: 48px;">😕</p>
+                            <p style="margin-top: 10px; font-weight: 600;">No matching diseases found</p>
+                            <p style="margin-top: 10px; font-size: 14px;">Try selecting different symptoms or consult a healthcare professional.</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    data.matches.forEach((match, index) => {
+                        const percentage = Math.round((match.match_score / match.total_symptoms) * 100);
+                        html += `
+                            <div class="disease-card" style="animation-delay: ${index * 0.1}s">
+                                <div class="disease-name">
+                                    ${match.disease}
+                                    <span class="match-badge">${match.match_score}/${match.total_symptoms} match</span>
+                                </div>
+                                <div style="color: #666; font-size: 14px;">
+                                    Match confidence: ${percentage}%
+                                </div>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    resultsContent.innerHTML = html;
+                }
+                
+                resultsDiv.classList.add('show');
+                
+            } catch (error) {
+                loadingDiv.classList.remove('show');
+                button.disabled = false;
+                errorDiv.innerHTML = `
+                    <strong>⚠️ Connection Error</strong><br>
+                    Make sure the C backend server is running on port 8080.<br>
+                    <small>Run: disease_server.exe in the backend folder</small>
+                `;
+                errorDiv.classList.add('show');
+                console.error('Error:', error);
+            }
+        }
+        
+        // Load symptoms on page load
+        window.addEventListener('load', loadSymptoms);
+    </script>
+</body>
+</html>
